@@ -1,0 +1,41 @@
+---
+title: "Example title"
+author: "Serebryakova-O"
+date: "`r Sys.Date()`"
+output: word_document
+---
+
+?mean ?cummean ??cummean
+
+RSiteSearch() RSiteSearch("biostatistics") libPaths() library() devtools::install_github("hadley/dplyr") library(dplyr) ?readr read_delim("C:/Users/Оля/Downloads/data_tsv.tsv", delim = NULL, quote = "/", na = c("","NA"), skip = 0, n_max = Inf, col_names = TRUE) read_csv("C:/Users/Оля/Downloads/data_csv.csv", skip = 0, n_max = Inf) read_csv2("C:/Users/Оля/Downloads/data_csv2.csv", skip = 0, n_max = Inf)
+
+# Среднее арифметическое --- это один из вариантов среднего значения: сумма всех элементов вектора, делённое на количество этих элементов.
+
+mean(c(20, 68, 45, 76, 41, 36, 13, 52, 77, 53, 70, 73))
+
+# Медиана --- это значение, меньше которого 50% значений.
+
+median(c(19, 89, 78, 38, 8, 17, 25, 60, 8, 43, 29, 6, 62, 41, 69, 97, 61, 83, 25, 24), trim = 0, na.rm = TRUE) min(c(60.22, 31.91, 72.71, 52.49, 46.21, 60.39, 60.09)) quantile(c(63.92, 35.85, 26.9, 48.92, 43.1, 66.94, 47.06, 56.54, 29.1, 58.88)) var(c(47.44, 62.44, 20.44, 72.75, 77.86, 13.74, 28.2, 50.47, 59.19, 69.04)) sd(c(76.22, 65, 19.69, 29.84, 37.18, 70.93, 64.78, 61.66, 49.03, 51.56)) IQR(c(63.92, 35.85, 26.9, 48.92, 43.1, 66.94, 47.06, 56.54, 29.1, 58.88))
+
+# Квантили
+quantile(x, probs = seq(0, 1, 0.25), na.rm = FALSE, names = TRUE, type = 7)
+
+x<-c(76.22, 65, 19.69, 29.84, 37.18, 70.93, 64.78, 61.66, 49.03, 51.56)
+
+# Стандартное отклонение — это квадратный корень из дисперсии, который измеряет отклонения в единицах переменной, а не в их квадратах.
+sd(x)/sqrt(length(x))
+
+read_rds("C:/Users/Оля/Downloads/numeric_data.rds") data\<- data.frame(read_rds("C:/Users/Оля/Downloads/numeric_data.rds"))\
+describe(data, na.rm = TRUE, skew = FALSE, ranges = TRUE)
+
+x\<-read_rds("C:/Users/Оля/Downloads/factor_data.rds") table(x$Группа, data$ 'Группа крови')
+
+data \<- read_tsv("C:/Users/Оля/Downloads/data_tsv (2).tsv")
+
+data %\>% select(`Группа`, (function(x) is.factor(x)) \| where(function(x) is.numeric(x)))
+
+data %\>% select(where(is.numeric) & where(function(x) sd(x, na.rm = TRUE) \> 1))
+
+data %\>% select(`Группа`, function(x) !is.factor(x)) data %\>% select(Группа крови, `Возраст`, function(x) anyNA(x))
+
+data %\>% select(`Группа крови`, `Возраст`, function(x) anyNA(x)) data %\>% select(function(x) sd(x, na.rm = TRUE) \> 1) data %\>% select(`Пол`, `Группа`, `Базофилы_E1`) data %\>% select(function(x) any(str_detect(x, "Жен"))) data %\>% mutate(across(!contains("E1") & !c(`Группа`, `Возраст`), function(x) x \^ 2)) data %\>% mutate(across(!contains("E1"), function(x) str_c(x, " + некая строка"))) data %\>% mutate(across(!contains("E1") & !c(`Группа`, `Возраст`) & !where(is.factor), function(x) x \^ 2), across(contains("E2"), function(x) x \* 100)) data %\>% mutate(across(function(x) any(near(x, 0.5, tol = 0.1)), function(x) x + 1000
