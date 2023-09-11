@@ -25,6 +25,9 @@ x<-c(76.22, 65, 19.69, 29.84, 37.18, 70.93, 64.78, 61.66, 49.03, 51.56)
 # Стандартное отклонение — это квадратный корень из дисперсии, который измеряет отклонения в единицах переменной, а не в их квадратах.
 sd(x)/sqrt(length(x))
 
+#Межквартильный интервал - позволяет оценить изменчивость данных, меньше завися от выбросов.
+IQR(x, na.rm = FALSE, type = 7)
+
 read_rds("C:/Users/Оля/Downloads/numeric_data.rds") data\<- data.frame(read_rds("C:/Users/Оля/Downloads/numeric_data.rds"))\
 describe(data, na.rm = TRUE, skew = FALSE, ranges = TRUE)
 
