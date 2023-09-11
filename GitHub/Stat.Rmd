@@ -39,3 +39,6 @@ data %\>% select(where(is.numeric) & where(function(x) sd(x, na.rm = TRUE) \> 1)
 data %\>% select(`Группа`, function(x) !is.factor(x)) data %\>% select(Группа крови, `Возраст`, function(x) anyNA(x))
 
 data %\>% select(`Группа крови`, `Возраст`, function(x) anyNA(x)) data %\>% select(function(x) sd(x, na.rm = TRUE) \> 1) data %\>% select(`Пол`, `Группа`, `Базофилы_E1`) data %\>% select(function(x) any(str_detect(x, "Жен"))) data %\>% mutate(across(!contains("E1") & !c(`Группа`, `Возраст`), function(x) x \^ 2)) data %\>% mutate(across(!contains("E1"), function(x) str_c(x, " + некая строка"))) data %\>% mutate(across(!contains("E1") & !c(`Группа`, `Возраст`) & !where(is.factor), function(x) x \^ 2), across(contains("E2"), function(x) x \* 100)) data %\>% mutate(across(function(x) any(near(x, 0.5, tol = 0.1)), function(x) x + 1000
+
+#Склеивание таблицы
+data_1 %>% bind_cols(data_2) %>% bind_cols(data_3)
