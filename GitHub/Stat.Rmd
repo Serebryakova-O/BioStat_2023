@@ -42,3 +42,6 @@ data %\>% select(`Группа крови`, `Возраст`, function(x) anyNA(
 
 #Склеивание таблицы
 data_1 %>% bind_cols(data_2) %>% bind_cols(data_3)
+
+#Группировка по названию колонки
+data %>% group_by(column_name)
