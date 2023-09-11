@@ -30,7 +30,7 @@ describe(data, na.rm = TRUE, skew = FALSE, ranges = TRUE)
 
 x\<-read_rds("C:/Users/Оля/Downloads/factor_data.rds") table(x$Группа, data$ 'Группа крови')
 
-data \<- read_tsv("C:/Users/Оля/Downloads/data_tsv (2).tsv")
+data <- read_tsv("C:/Users/Оля/Downloads/data_tsv (2).tsv")
 
 data %\>% select(`Группа`, (function(x) is.factor(x)) \| where(function(x) is.numeric(x)))
 
@@ -45,3 +45,18 @@ data_1 %>% bind_cols(data_2) %>% bind_cols(data_3)
 
 #Группировка по названию колонки
 data %>% group_by(column_name)
+
+#Выбираем переменные в дата-фрейме
+data %>% select(contains("_E1"))
+
+#Формирование стат. таблицы
+```{r}
+data %>%
+  select(., 'Группа', 'Рост', where(is.numeric) & contains("E1")) %>%
+  filter(., 'Группа' == "Группа 1") %>%
+  slice(., 1:10) %>%
+  mutate(., 'Рост' = 'Рост' / 10)
+```
+
+
+
