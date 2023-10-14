@@ -1,0 +1,531 @@
+---
+title: "automatization_notebook_03"
+output: word_document
+date: "`r Sys.Date()`"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+
+```
+
+# Чтение данных
+
+В вашем варианте нужно использовать датасет framingham.
+
+```{r}
+framingham <- read.csv("framingham.csv")
+
+```
+
+# Выведите общее описание данных
+
+```{r}
+str(framingham)
+
+```
+
+# Очистка данных
+
+1) Уберите переменные, в которых пропущенных значений больше 20% или уберите субъектов со слишком большим количеством пропущенных значений. Или совместите оба варианта. Напишите обоснование, почему вы выбрали тот или иной вариант:
+
+**Обоснование**: в дата-фрейме нет переменных, в которых меньше 10% пропущенных значений.
+
+2) Переименуйте переменные в человекочитаемый вид (что делать с пробелами в названиях?);
+
+3) В соответствии с описанием данных приведите переменные к нужному типу (numeric или factor);
+
+4) Отсортируйте данные по возрасту по убыванию;
+
+5) Сохраните в файл outliers.csv субъектов, которые являются выбросами (например, по правилу трёх сигм) — это необязательное задание со звёздочкой;
+
+6) Присвойте получившийся датасет переменной "cleaned_data".
+
+```{r}
+cleaned_data = framingham 
+cleaned_data = cleaned_data %>% rename(current_Smoker = currentSmoker, 
+                      cigs_Per_Day = cigsPerDay,
+                      BP_Meds = BPMeds,
+                      prevalent_Hyp = prevalentHyp,
+                      prevalent_Stroke = prevalentStroke,
+                      tot_Chol = totChol,
+                      sys_BP = sysBP,
+                      dia_BP = diaBP,
+                      heart_Rate = heartRate,
+                      Ten_Year_CHD = TenYearCHD)
+
+cleaned_data$age = as.numeric(cleaned_data$age)
+cleaned_data$cigs_Per_Day = as.numeric(cleaned_data$cigs_Per_Day)
+cleaned_data$tot_Chol = as.numeric(cleaned_data$tot_Chol)
+cleaned_data$heart_Rate = as.numeric(cleaned_data$heart_Rate)
+cleaned_data$glucose = as.numeric(cleaned_data$glucose)
+
+cleaned_data$male = as.factor(cleaned_data$male)
+cleaned_data$education = as.factor(cleaned_data$education)
+cleaned_data$current_Smoker = as.factor(cleaned_data$current_Smoker)
+cleaned_data$BP_Meds = as.factor(cleaned_data$BP_Meds)
+cleaned_data$prevalent_Stroke = as.factor(cleaned_data$prevalent_Stroke)
+cleaned_data$prevalent_Hyp = as.factor(cleaned_data$prevalent_Hyp)
+cleaned_data$diabetes = as.factor(cleaned_data$diabetes)
+cleaned_data$Ten_Year_CHD = as.factor(cleaned_data$Ten_Year_CHD)
+
+#пыталась сделать ко всему дата фрейму одновременно, но ничего не менялось, код: cleaned_data = cleaned_data %>% transform(as.numeric(cleaned_data$age), as.numeric(cleaned_data$cigs_Per_Day), as.numeric(cleaned_data$tot_Chol), as.numeric(cleaned_data$heart_Rate), as.numeric(cleaned_data$glucose))
+
+str(cleaned_data)
+
+cleaned_data = cleaned_data[ order (-cleaned_data$age), ]
+
+cleaned_data = cleaned_data[, which(colMeans(!is.na(cleaned_data)) > 0.05)]
+
+
+```
+
+# Сколько осталось переменных?
+
+```{r}
+
+str(cleaned_data) #16 переменных
+
+```
+
+# Сколько осталось случаев?
+
+```{r}
+
+str(cleaned_data) #4238 случаев
+
+```
+
+# Есть ли в данных идентичные строки?
+
+```{r}
+
+duplicated_rows = sum(duplicated(cleaned_data))
+print(duplicated_rows)
+
+```
+
+# Сколько всего переменных с пропущенными значениями в данных и сколько пропущенных точек в каждой такой переменной?
+
+```{r}
+
+sapply(cleaned_data, function(y) sum(length(which(is.na(y)))))
+
+```
+
+# Описательные статистики
+
+## Количественные переменные
+
+1) Рассчитайте для всех количественных переменных для каждой группы (TenYearCHD):
+
+1.1) Количество значений;
+
+1.2) Количество пропущенных значений;
+
+1.3) Среднее;
+
+1.4) Медиану;
+
+1.5) Стандартное отклонение;
+
+1.6) 25% квантиль и 75% квантиль;
+
+1.7) Интерквартильный размах;
+
+1.8) Минимум;
+
+1.9) Максимум;
+
+1.10) 95% ДИ для среднего - задание со звёздочкой.
+
+```{r}
+
+TYCHD0 <- cleaned_data[cleaned_data$Ten_Year_CHD == 0, ]
+TYCHD1 <- cleaned_data[cleaned_data$Ten_Year_CHD != 0, ]
+describe(TYCHD0)
+describe(TYCHD1)
+
+#ИЛИ
+
+numericTYCHD0 = TYCHD0[, sapply(TYCHD0, is.numeric)]
+numericTYCHD1 = TYCHD1[, sapply(TYCHD1, is.numeric)]
+
+library(dplyr)
+cleaned_data%>%
+group_by(Ten_Year_CHD)%>% 
+summarise(count = count(age), NAs = sum(is.na(age)), Mean=mean(age), Median=median(age), Std=sd(age), quantile(age), IQR(age), min = min(age), max = max(age))
+
+cleaned_data%>%
+group_by(Ten_Year_CHD)%>% 
+summarise(count = count(tot_Chol), NAs = sum(is.na(tot_Chol)), Mean=mean(tot_Chol), Median=median(tot_Chol), Std=sd(tot_Chol), quantile(tot_Chol), IQR(tot_Chol), min = min(tot_Chol), max = max(tot_Chol))
+
+cleaned_data%>%
+group_by(Ten_Year_CHD)%>% 
+summarise(count = count(sys_BP), NAs = sum(is.na(sys_BP)), Mean=mean(sys_BP), Median=median(sys_BP), Std=sd(sys_BP), quantile(sys_BP), IQR(sys_BP), min = min(sys_BP), max = max(sys_BP))
+
+cleaned_data%>%
+group_by(Ten_Year_CHD)%>% 
+summarise(count = count(dia_BP), NAs = sum(is.na(dia_BP)), Mean=mean(dia_BP), Median=median(dia_BP), Std=sd(dia_BP), quantile(dia_BP), IQR(dia_BP), min = min(dia_BP), max = max(dia_BP))
+
+cleaned_data%>%
+group_by(Ten_Year_CHD)%>% 
+summarise(count = count(BMI), NAs = sum(is.na(BMI)), Mean=mean(BMI), Median=median(BMI), Std=sd(BMI), quantile(BMI), IQR(BMI), min = min(BMI), max = max(BMI))
+
+cleaned_data%>%
+group_by(Ten_Year_CHD)%>% 
+summarise(count = count(heart_Rate), NAs = sum(is.na(heart_Rate)), Mean=mean(heart_Rate), Median=median(heart_Rate), Std=sd(heart_Rate), quantile(heart_Rate), IQR(heart_Rate), min = min(heart_Rate), max = max(heart_Rate))
+
+cleaned_data%>%
+group_by(Ten_Year_CHD)%>% 
+summarise(count = count(glucose), NAs = sum(is.na(glucose)), Mean=mean(glucose), Median=median(glucose), Std=sd(glucose), quantile(glucose), IQR(glucose), min = min(glucose), max = max(glucose))
+
+```
+
+## Категориальные переменные
+
+1) Рассчитайте для всех категориальных переменных для каждой группы (TenYearCHD):
+
+1.1) Абсолютное количество;
+
+1.2) Относительное количество внутри группы;
+
+1.3) 95% ДИ для доли внутри группы - задание со звёздочкой.
+
+```{r}
+factorTYCHD0 = TYCHD0[, sapply(TYCHD0, is.factor)]
+factorTYCHD1 = TYCHD1[, sapply(TYCHD1, is.factor)]
+summary(factorTYCHD0)
+#ИЛИ Группа TenYearCHD0
+male_TYCHD0 = table(factorTYCHD0$male)
+cat('Мужчин (абс)=', male_TYCHD0[c(2)])
+sum_male_TYCHD0 = sum(group_counts)
+percent_male_TYCHD0 = (male_TYCHD0/sum_male_TYCHD0)
+cat('Мужчин, Отн = ', percent_male_TYCHD0[c(2)])
+margin_male <- qnorm(0.975)*percent_male_TYCHD0[c(2)]*(1-percent_male_TYCHD0[c(2)])/male_TYCHD0[c(2)]
+cat('ДИ =', percent_male_TYCHD0[c(2)]-margin_male, percent_male_TYCHD0[c(2)]+margin_male)
+
+smoker_TYCHD0 = table(factorTYCHD0$current_Smoker)
+cat('курильщиков (абс)=', smoker_TYCHD0[c(2)])
+sum_smoker_TYCHD0 = sum(group_counts)
+percent_smoker_TYCHD0 = (smoker_TYCHD0/sum_smoker_TYCHD0)
+cat('курильщиков, Отн = ', percent_smoker_TYCHD0[c(2)])
+margin_smoker <- qnorm(0.975)*percent_smoker_TYCHD0[c(2)]*(1-percent_smoker_TYCHD0[c(2)])/smoker_TYCHD0[c(2)]
+cat('ДИ =', percent_smoker_TYCHD0[c(2)]-margin_smoker, percent_smoker_TYCHD0[c(2)]+margin_smoker)
+
+BPmeds_TYCHD0 = table(factorTYCHD0$BP_Meds)
+cat('На АГ терапии (абс)=', BPmeds_TYCHD0[c(2)])
+sum_BPmeds_TYCHD0 = sum(group_counts)
+percent_BPmeds_TYCHD0 = (BPmeds_TYCHD0/sum_BPmeds_TYCHD0)
+cat('На АГ терапии, Отн = ', percent_BPmeds_TYCHD0[c(2)])
+margin_BPmeds <- qnorm(0.975)*percent_BPmeds_TYCHD0[c(2)]*(1-percent_BPmeds_TYCHD0[c(2)])/BPmeds_TYCHD0[c(2)]
+cat('ДИ =', percent_BPmeds_TYCHD0[c(2)]-margin_male, percent_BPmeds_TYCHD0[c(2)]+margin_BPmeds)
+
+Stroke_TYCHD0 = table(factorTYCHD0$prevalent_Stroke)
+cat('Инсульт в анамнезе (абс)=', Stroke_TYCHD0[c(2)])
+sum_stroke_TYCHD0 = sum(group_counts)
+percent_stroke_TYCHD0 = (stroke_TYCHD0/sum_stroke_TYCHD0)
+cat('инсульт в анамнезе, Отн = ', percent_stroke_TYCHD0[c(2)])
+margin_stroke <- qnorm(0.975)*percent_stroke_TYCHD0[c(2)]*(1-percent_stroke_TYCHD0[c(2)])/stroke_TYCHD0[c(2)]
+cat('ДИ =', percent_stroke_TYCHD0[c(2)]-margin_stroke, percent_stroke_TYCHD0[c(2)]+margin_stroke)
+
+Hyp_TYCHD0 = table(factorTYCHD0$prevalent_Hyp)
+cat('ГБ в анамнезе (абс)=', Hyp_TYCHD0[c(2)])
+sum_hyp_TYCHD0 = sum(group_counts)
+percent_hyp_TYCHD0 = (hyp_TYCHD0/sum_hyp_TYCHD0)
+cat('ГБ в анамнезе, Отн = ', percent_hyp_TYCHD0[c(2)])
+margin_hyp <- qnorm(0.975)*percent_hyp_TYCHD0[c(2)]*(1-percent_hyp_TYCHD0[c(2)])/hyp_TYCHD0[c(2)]
+cat('ДИ =', percent_hyp_TYCHD0[c(2)]-margin_hyp, percent_hyp_TYCHD0[c(2)]+margin_hyp)
+
+diabetes_TYCHD0 = table(factorTYCHD0$diabetes)
+cat('диабет (абс)=', diabetes_TYCHD0[c(2)])
+sum_diabetes_TYCHD0 = sum(group_counts)
+percent_diabetes_TYCHD0 = (diabetes_TYCHD0/sum_diabetes_TYCHD0)
+cat('диабет, Отн = ', percent_diabetes_TYCHD0[c(2)])
+margin_male <- qnorm(0.975)*percent_diabetes_TYCHD0[c(2)]*(1-percent_diabetes_TYCHD0[c(2)])/diabetes_TYCHD0[c(2)]
+cat('ДИ =', percent_diabetes_TYCHD0[c(2)]-margin_diabetes, percent_diabetes_TYCHD0[c(2)]+margin_diabetes)
+
+#ИЛИ Группа TenYearCHD0
+male_TYCHD0 = table(factorTYCHD0$male)
+cat('Мужчин (абс)=', male_TYCHD0[c(2)])
+sum_male_TYCHD0 = sum(group_counts)
+percent_male_TYCHD0 = (male_TYCHD0/sum_male_TYCHD0)
+cat('Мужчин, Отн = ', percent_male_TYCHD0[c(2)])
+margin_male <- qnorm(0.975)*percent_male_TYCHD0[c(2)]*(1-percent_male_TYCHD0[c(2)])/male_TYCHD0[c(2)]
+cat('ДИ =', percent_male_TYCHD0[c(2)]-margin_male, percent_male_TYCHD0[c(2)]+margin_male)
+
+smoker_TYCHD0 = table(factorTYCHD0$current_Smoker)
+cat('курильщиков (абс)=', smoker_TYCHD0[c(2)])
+sum_smoker_TYCHD0 = sum(group_counts)
+percent_smoker_TYCHD0 = (smoker_TYCHD0/sum_smoker_TYCHD0)
+cat('курильщиков, Отн = ', percent_smoker_TYCHD0[c(2)])
+margin_smoker <- qnorm(0.975)*percent_smoker_TYCHD0[c(2)]*(1-percent_smoker_TYCHD0[c(2)])/smoker_TYCHD0[c(2)]
+cat('ДИ =', percent_smoker_TYCHD0[c(2)]-margin_smoker, percent_smoker_TYCHD0[c(2)]+margin_smoker)
+
+BPmeds_TYCHD0 = table(factorTYCHD0$BP_Meds)
+cat('На АГ терапии (абс)=', BPmeds_TYCHD0[c(2)])
+sum_BPmeds_TYCHD0 = sum(group_counts)
+percent_BPmeds_TYCHD0 = (BPmeds_TYCHD0/sum_BPmeds_TYCHD0)
+cat('На АГ терапии, Отн = ', percent_BPmeds_TYCHD0[c(2)])
+margin_BPmeds <- qnorm(0.975)*percent_BPmeds_TYCHD0[c(2)]*(1-percent_BPmeds_TYCHD0[c(2)])/BPmeds_TYCHD0[c(2)]
+cat('ДИ =', percent_BPmeds_TYCHD0[c(2)]-margin_male, percent_BPmeds_TYCHD0[c(2)]+margin_BPmeds)
+
+Stroke_TYCHD0 = table(factorTYCHD0$prevalent_Stroke)
+cat('Инсульт в анамнезе (абс)=', Stroke_TYCHD0[c(2)])
+sum_stroke_TYCHD0 = sum(group_counts)
+percent_stroke_TYCHD0 = (stroke_TYCHD0/sum_stroke_TYCHD0)
+cat('инсульт в анамнезе, Отн = ', percent_stroke_TYCHD0[c(2)])
+margin_stroke <- qnorm(0.975)*percent_stroke_TYCHD0[c(2)]*(1-percent_stroke_TYCHD0[c(2)])/stroke_TYCHD0[c(2)]
+cat('ДИ =', percent_stroke_TYCHD0[c(2)]-margin_stroke, percent_stroke_TYCHD0[c(2)]+margin_stroke)
+
+Hyp_TYCHD0 = table(factorTYCHD0$prevalent_Hyp)
+cat('ГБ в анамнезе (абс)=', Hyp_TYCHD0[c(2)])
+sum_hyp_TYCHD0 = sum(group_counts)
+percent_hyp_TYCHD0 = (hyp_TYCHD0/sum_hyp_TYCHD0)
+cat('ГБ в анамнезе, Отн = ', percent_hyp_TYCHD0[c(2)])
+margin_hyp <- qnorm(0.975)*percent_hyp_TYCHD0[c(2)]*(1-percent_hyp_TYCHD0[c(2)])/hyp_TYCHD0[c(2)]
+cat('ДИ =', percent_hyp_TYCHD0[c(2)]-margin_hyp, percent_hyp_TYCHD0[c(2)]+margin_hyp)
+
+diabetes_TYCHD0 = table(factorTYCHD0$diabetes)
+cat('диабет (абс)=', diabetes_TYCHD0[c(2)])
+sum_diabetes_TYCHD0 = sum(group_counts)
+percent_diabetes_TYCHD0 = (diabetes_TYCHD0/sum_diabetes_TYCHD0)
+cat('диабет, Отн = ', percent_diabetes_TYCHD0[c(2)])
+margin_male <- qnorm(0.975)*percent_diabetes_TYCHD0[c(2)]*(1-percent_diabetes_TYCHD0[c(2)])/diabetes_TYCHD0[c(2)]
+cat('ДИ =', percent_diabetes_TYCHD0[c(2)]-margin_diabetes, percent_diabetes_TYCHD0[c(2)]+margin_diabetes)
+
+#ИЛИ Группа TenYearCHD1
+male_TYCHD1 = table(factorTYCHD1$male)
+cat('Мужчин (абс)=', male_TYCHD1[c(2)])
+sum_male_TYCHD1 = sum(group_counts)
+percent_male_TYCHD1 = (male_TYCHD1/sum_male_TYCHD1)
+cat('Мужчин, Отн = ', percent_male_TYCHD1[c(2)])
+margin_male <- qnorm(0.975)*percent_male_TYCHD1[c(2)]*(1-percent_male_TYCHD1[c(2)])/male_TYCHD1[c(2)]
+cat('ДИ =', percent_male_TYCHD1[c(2)]-margin_male, percent_male_TYCHD1[c(2)]+margin_male)
+
+smoker_TYCHD1 = table(factorTYCHD1$current_Smoker)
+cat('курильщиков (абс)=', smoker_TYCHD1[c(2)])
+sum_smoker_TYCHD1 = sum(group_counts)
+percent_smoker_TYCHD1 = (smoker_TYCHD1/sum_smoker_TYCHD1)
+cat('курильщиков, Отн = ', percent_smoker_TYCHD1[c(2)])
+margin_smoker <- qnorm(0.975)*percent_smoker_TYCHD1[c(2)]*(1-percent_smoker_TYCHD1[c(2)])/smoker_TYCHD1[c(2)]
+cat('ДИ =', percent_smoker_TYCHD1[c(2)]-margin_smoker, percent_smoker_TYCHD1[c(2)]+margin_smoker)
+
+BPmeds_TYCHD1 = table(factorTYCHD1$BP_Meds)
+cat('На АГ терапии (абс)=', BPmeds_TYCHD1[c(2)])
+sum_BPmeds_TYCHD1 = sum(group_counts)
+percent_BPmeds_TYCHD1 = (BPmeds_TYCHD1/sum_BPmeds_TYCHD1)
+cat('На АГ терапии, Отн = ', percent_BPmeds_TYCHD1[c(2)])
+margin_BPmeds <- qnorm(0.975)*percent_BPmeds_TYCHD1[c(2)]*(1-percent_BPmeds_TYCHD1[c(2)])/BPmeds_TYCHD1[c(2)]
+cat('ДИ =', percent_BPmeds_TYCHD1[c(2)]-margin_male, percent_BPmeds_TYCHD1[c(2)]+margin_BPmeds)
+
+Stroke_TYCHD1 = table(factorTYCHD1$prevalent_Stroke)
+cat('Инсульт в анамнезе (абс)=', Stroke_TYCHD1[c(2)])
+sum_stroke_TYCHD1 = sum(group_counts)
+percent_stroke_TYCHD1 = (stroke_TYCHD1/sum_stroke_TYCHD1)
+cat('инсульт в анамнезе, Отн = ', percent_stroke_TYCHD1[c(2)])
+margin_stroke <- qnorm(0.975)*percent_stroke_TYCHD1[c(2)]*(1-percent_stroke_TYCHD1[c(2)])/stroke_TYCHD1[c(2)]
+cat('ДИ =', percent_stroke_TYCHD1[c(2)]-margin_stroke, percent_stroke_TYCHD1[c(2)]+margin_stroke)
+
+Hyp_TYCHD1 = table(factorTYCHD1$prevalent_Hyp)
+cat('ГБ в анамнезе (абс)=', Hyp_TYCHD1[c(2)])
+sum_hyp_TYCHD1 = sum(group_counts)
+percent_hyp_TYCHD1 = (hyp_TYCHD1/sum_hyp_TYCHD1)
+cat('ГБ в анамнезе, Отн = ', percent_hyp_TYCHD1[c(2)])
+margin_hyp <- qnorm(0.975)*percent_hyp_TYCHD1[c(2)]*(1-percent_hyp_TYCHD1[c(2)])/hyp_TYCHD1[c(2)]
+cat('ДИ =', percent_hyp_TYCHD1[c(2)]-margin_hyp, percent_hyp_TYCHD1[c(2)]+margin_hyp)
+
+diabetes_TYCHD1 = table(factorTYCHD1$diabetes)
+cat('диабет (абс)=', diabetes_TYCHD1[c(2)])
+sum_diabetes_TYCHD1 = sum(group_counts)
+percent_diabetes_TYCHD1 = (diabetes_TYCHD1/sum_diabetes_TYCHD1)
+cat('диабет, Отн = ', percent_diabetes_TYCHD1[c(2)])
+margin_male <- qnorm(0.975)*percent_diabetes_TYCHD1[c(2)]*(1-percent_diabetes_TYCHD1[c(2)])/diabetes_TYCHD1[c(2)]
+cat('ДИ =', percent_diabetes_TYCHD1[c(2)]-margin_diabetes, percent_diabetes_TYCHD1[c(2)]+margin_diabetes)
+```
+
+# Визуализация
+
+## Количественные переменные
+
+1) Для каждой количественной переменной сделайте боксплоты по группам. Расположите их либо на отдельных рисунках, либо на одном, но читаемо;
+
+2) Наложите на боксплоты beeplots - задание со звёздочкой.
+
+3) Раскрасьте боксплоты с помощью библиотеки RColorBrewer.
+
+```{r}
+
+library(RColorBrewer)
+
+cleaned_data %>%
+  ggplot(aes(y = age)) +
+  geom_boxplot(fill = "steelblue")+
+  theme(legend.position="none")
+
+cleaned_data %>%
+  ggplot(aes(y = tot_Chol)) +
+  geom_boxplot(fill = "yellow")+
+  theme(legend.position="none")
+
+cleaned_data %>%
+  ggplot(aes(y = sys_BP)) +
+  geom_boxplot(fill = 'lightgreen')+
+  theme(legend.position="none")
+
+cleaned_data %>%
+  ggplot(aes(y = dia_BP)) +
+  geom_boxplot(fill = "darkgreen")+
+  theme(legend.position="none")
+
+cleaned_data %>%
+  ggplot(aes(y = BMI)) +
+  geom_boxplot(fill = "red")+
+  theme(legend.position="none")
+
+cleaned_data %>%
+  ggplot(aes(y = heart_Rate)) +
+  geom_boxplot(fill = "purple")+
+  theme(legend.position="none")
+
+cleaned_data %>%
+  ggplot(aes(y = glucose)) +
+  geom_boxplot(fill = "darkblue")+
+  theme(legend.position="none")
+```
+
+## Категориальные переменные
+
+1) Сделайте подходящие визуализации категориальных переменных. Обоснуйте, почему выбрали именно этот тип.
+
+```{r}
+
+ggplot(cleaned_data, aes (x = reorder (education, education, function (x)- length (x)))) +
+ geom_bar(fill='steelblue') +
+ labs(x='Education')
+
+```
+
+
+# Статистические оценки
+
+## Проверка на нормальность
+
+1) Оцените каждую переменную на соответствие нормальному распределению с помощью теста Шапиро-Уилка. Какие из переменных являются нормальными и как как вы это поняли?
+
+```{r}
+numeric = cleaned_data[, sapply(cleaned_data, is.numeric)]
+sapply(numeric, shapiro.test) #все переменных распределены ненормально, тк p-value меньше 0.05
+
+```
+
+2) Постройте для каждой количественной переменной QQ-плот. Отличаются ли выводы от теста Шапиро-Уилка? Какой метод вы бы предпочли и почему?
+
+```{r}
+numeric = cleaned_data[, sapply(cleaned_data, is.numeric)]
+
+library(ggplot2)
+#Age
+ggplot(cleaned_data, aes(sample=age)) +
+  labs(title="Age")+
+  stat_qq() + 
+  stat_qq_line()
+#Tot_Chol
+ggplot(cleaned_data, aes(sample=tot_Chol)) +
+  labs(title="tot_Chol")+
+  stat_qq() + 
+  stat_qq_line()
+#sys_BP
+ggplot(cleaned_data, aes(sample=sys_BP)) +
+  labs(title="sys_BP")+
+  stat_qq() + 
+  stat_qq_line()
+#dia_BP
+plot(cleaned_data, aes(sample=dia_BP)) +
+  labs(title="dia_BP")+
+  stat_qq() + 
+  stat_qq_line()
+#BMI
+plot(cleaned_data, aes(sample=BMI)) +
+  labs(title="BMI")+
+  stat_qq() + 
+  stat_qq_line()
+#heart_Rate
+plot(cleaned_data, aes(sample=heart_Rate)) +
+  labs(title="heart_Rate")+
+  stat_qq() + 
+  stat_qq_line()
+#glucose
+plot(cleaned_data, aes(sample=glucose)) +
+  labs(title="glucose")+
+  stat_qq() + 
+  stat_qq_line()
+
+```
+
+3) Ниже напишите, какие ещё методы проверки на нормальность вы знаете и какие у них есть ограничения.
+Тест Колмогорова-Смирнова. Ограничения: критерий требует, чтобы выборка была достаточно большой (больше 50-80) и разряды должны быть упорядочены по нарастанию или убыванию какого-либо признака. .
+Тест или поправка Лильефорса - также для больших выборок.
+Шапиро-уилка подходит в том числе для небольших выборок.
+
+
+
+## Сравнение групп
+
+1) Сравните группы (переменная **TenYearCHD**) по каждой переменной (как количественной, так и категориальной). Для каждой переменной выберите нужный критерий и кратко обоснуйте его выбор в комментариях.
+
+```{r}
+#Выбрала тест Манна-Уитни, так как ранее выяснили, что распределение данных отлично от нормального. Для категориальных переменных был выбран Хи-квадрат, так как достаточно много наблюдений в выборке. 
+age = wilcox.test(TYCHD0$age, TYCHD1$age)
+Chol = wilcox.test(TYCHD0$tot_Chol, TYCHD1$tot_Chol)
+sysBP = wilcox.test(TYCHD0$sys_BP, TYCHD1$sys_BP)
+diaBP = wilcox.test(TYCHD0$dia_BP, TYCHD1$dia_BP)
+BMI = wilcox.test(TYCHD0$BMI, TYCHD1$BMI)
+HR = wilcox.test(TYCHD0$heart_Rate, TYCHD1$heart_Rate)
+glucose = wilcox.test(TYCHD0$glucose, TYCHD1$glucose)
+
+pvalue <- c(age[["p.value"]], Chol[["p.value"]], sysBP[["p.value"]], diaBP[["p.value"]], BMI[["p.value"]], HR[["p.value"]], glucose[["p.value"]])
+obs. <- c("Age", "Chol", "sysBP", "diaBP", "BMI", "HR", "glucose")
+Wilcox <- data.frame(obs. = obs., pvalue = pvalue)
+print(Wilcox)
+
+male = chisq.test(cleaned_data$male, cleaned_data$Ten_Year_CHD, correct=FALSE)
+Smoker = chisq.test(cleaned_data$current_Smoker, cleaned_data$Ten_Year_CHD, correct=FALSE)
+BPmeds = chisq.test(cleaned_data$BP_Meds, cleaned_data$Ten_Year_CHD, correct=FALSE)
+Stroke = chisq.test(cleaned_data$prevalent_Stroke, cleaned_data$Ten_Year_CHD, correct=FALSE)
+Hyp = chisq.test(cleaned_data$prevalent_Hyp, cleaned_data$Ten_Year_CHD, correct=FALSE)
+diabetes = chisq.test(cleaned_data$diabetes, cleaned_data$Ten_Year_CHD, correct=FALSE)
+
+chisq <- c(male[["p.value"]], Smoker[["p.value"]], BPmeds[["p.value"]], Stroke[["p.value"]], Hyp[["p.value"]], diabetes[["p.value"]])
+obs_chisq <- c("gender", "smoker", "BPmeds", "stroke", "hypertension", "diabetes")
+chisqtest <- data.frame(obs_chisq = obs_chisq, chisq = chisq)
+print(chisqtest)
+```
+
+# Далее идут **необязательные** дополнительные задания, которые могут принести вам дополнительные баллы в том числе в случае ошибок в предыдущих
+
+## Корреляционный анализ
+
+1) Создайте корреляционную матрицу с визуализацией и поправкой на множественные сравнения. Объясните, когда лучше использовать корреляционные матрицы и в чём минусы и плюсы корреляционных исследований.
+
+```{r}
+
+
+
+```
+
+## Моделирование
+
+1) Постройте регрессионную модель для переменной **TenYearCHD**. Опишите процесс построения
+
+```{r}
+
+
+
+```
+
+
+
+
